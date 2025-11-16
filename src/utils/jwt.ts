@@ -6,8 +6,10 @@ export function tokenize(payload: object){
 
 export function verifyToken(token: string){
     try {
-        return jwt.verify(token, process.env.JWT_SECRET as string);
+        const verify = jwt.verify(token, process.env.JWT_SECRET as string);
+        
+        if(verify) return true;
     } catch (e) {
-        return e;
+        return false;
     }
 }

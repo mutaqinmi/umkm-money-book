@@ -5,10 +5,10 @@ import { tokenize } from "@/src/utils/jwt";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
-    const cookieStore = cookies();
-    const { email, password } = await req.json();
-
     try {
+        const cookieStore = cookies();
+        const { email, password } = await req.json();
+
         // check user availability
         const user = await getUser(email);
 
@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
         const token = tokenize({ id: user[0].id, email: user[0].email });
 
         (await cookieStore).set("session_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+            maxAge: 60 * 60 * 24
+        });
+        (await cookieStore).set("user_id", user[0].id, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",

@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import argon2 from "argon2";
 import { tokenize } from "@/src/utils/jwt";
 import { cookies } from "next/headers";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: NextRequest) {
-    const cookieStore = cookies();
-    const { email, password, name } = await req.json();
-
     try {
+        const cookieStore = cookies();
+        const { email, password, name } = await req.json();
+        
         // check user availability
         const user = await getUser(email);
 
@@ -22,13 +23,20 @@ export async function POST(req: NextRequest) {
         const hashedPassword = await argon2.hash(password);
 
         // create new user
-        await createUser(email, hashedPassword, name);
+        const userId = uuidv4();
+        await createUser(userId, email, hashedPassword, name);
 
         // generate session token
-        // generate session token
-        const token = tokenize({ id: user[0].id, email: user[0].email });
+        const token = tokenize({ id: userId, email: email });
 
         (await cookieStore).set("session_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+            maxAge: 60 * 60 * 24
+        });
+        (await cookieStore).set("user_id", userId, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",

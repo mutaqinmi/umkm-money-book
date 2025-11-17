@@ -47,3 +47,17 @@ export function createTransaction(id: string, userId: string, transactionType: s
         receiptImage
     }).returning();
 }
+
+export function editTransaction(id: string, name: string, price: number, description?: string, receiptImage?: string){
+    return db.update(table.transactions).set({
+        name,
+        price,
+        description,
+        receiptImage
+    }).where(eq(table.transactions.id, id)).returning();
+}
+
+export function deleteTransaction(id: string){
+    return db.delete(table.transactions)
+        .where(eq(table.transactions.id, id));
+}

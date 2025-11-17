@@ -11,8 +11,8 @@ export default async function proxy(req: NextRequest){
 
     // const authenticated = sessionToken && verifiedToken;
     // const authPages = [
-    //     "/signin",
-    //     "/signup"
+    //     "/auth/signin",
+    //     "/auth/signup"
     // ];
 
     // if (authenticated){

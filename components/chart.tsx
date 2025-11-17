@@ -32,7 +32,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function ChartAreaGradient() {
-    return <ChartContainer config={chartConfig} className="bg-white p-4 rounded-lg">
+    return <ChartContainer config={chartConfig} className="bg-white p-2 rounded-lg">
         <AreaChart
             accessibilityLayer
             data={chartData}

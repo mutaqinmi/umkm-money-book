@@ -1,15 +1,18 @@
 "use client";
 import ChartAreaGradient from "@/components/chart";
 import Navbar from "@/components/navbar/navbar";
+import { TransactionItem } from "@/components/transaction-item/transaction-item";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BanknoteArrowDown, BanknoteArrowUp, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Page() {
+    const route = useRouter();
     const [ showNewTransaction, setShowNewTransaction ] = useState(false);
 
-    return <Navbar>
+    return <Navbar title="Dashboard">
         <div className="bg-white p-4 rounded-lg flex justify-between items-center">
             <span className="text-gray-400">Total Saldo</span>
             <span className="font-semibold">Rp.12.000.000</span>
@@ -37,24 +40,15 @@ export default function Page() {
         </div>
         <div className="mt-4">
             <h2 className="text-lg font-semibold mb-2 text-gray-400">Riwayat Transaksi</h2>
-            <div className="flex justify-between items-center p-4 h-20 bg-white rounded-lg">
-                <div className="h-full flex gap-3">
-                    <div className="h-full flex items-center justify-center bg-green-200 aspect-square rounded-full"><BanknoteArrowDown className="text-green-500"/></div>
-                    <div className="flex flex-col">
-                        <span className="font-semibold">Penjualan Harian</span>
-                        <span className="text-sm text-gray-400">18 November 2025</span>
-                    </div>
-                </div>
-                <span className="text-green-500 text-sm">+ Rp.200.000</span>
-            </div>
+            <TransactionItem />
         </div>
         <div className="w-15 h-15 rounded-full flex justify-center items-center bg-black text-white absolute right-4 bottom-0" onClick={() => setShowNewTransaction(!showNewTransaction)}><Plus className={cn("transition-all duration-300 ease-in-out", showNewTransaction ? "rotate-45" : "")} /></div>
         {showNewTransaction && <div className="absolute right-4 bottom-18 flex flex-col items-end gap-2">
-            <Button size={"lg"}>
+            <Button size={"lg"} onClick={() => route.push("/pemasukan/tambah")}>
                 <BanknoteArrowDown />
                 <span>Pemasukan</span>
             </Button>
-            <Button size={"lg"}>
+            <Button size={"lg"} onClick={() => route.push("/pengeluaran/tambah")}>
                 <BanknoteArrowUp />
                 <span>Pengeluaran</span>
             </Button>

@@ -10,19 +10,22 @@ import {
 import { useNavbar } from "./useNavbar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface NavbarProps {
     children: React.ReactNode;
+    title: string;
 }
 
-export default function Navbar({ children }: NavbarProps) {
+export default function Navbar({ children, title }: NavbarProps) {
+    const route = useRouter();
     const { isOpen, toggleNavbar } = useNavbar();
 
-    return <div className="h-full fixed top-0">
+    return <div className="w-full h-full fixed top-0">
         <div className="w-full p-4 bg-white flex justify-between items-center">
             <div className="flex gap-4">
                 <MenuIcon onClick={() => toggleNavbar()} />
-                <h1 className="text-lg font-semibold">Dashboard</h1>
+                <h1 className="text-lg font-semibold">{title}</h1>
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -32,7 +35,7 @@ export default function Navbar({ children }: NavbarProps) {
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex justify-between">
+                    <DropdownMenuItem className="flex justify-between" onClick={() => route.push("/akun")}>
                         <span>Profil</span>
                         <UserIcon />
                     </DropdownMenuItem>
@@ -52,16 +55,25 @@ export default function Navbar({ children }: NavbarProps) {
                 <span className="font-semibold text-lg">Menu</span>
                 <X onClick={() => toggleNavbar()} />
             </div>
-            <span className="mt-8 inline-block text-sm text-gray-400">Keuangan</span>
+            <span className="mt-8 inline-block text-sm text-gray-400">Beranda</span>
             <ul className="mt-2">
                 <li>
-                    <Link className="py-3 flex items-center justify-between" href={"/pemasukan"}>
+                    <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/"}>
+                        <span>Dashboard</span>
+                        <ArrowUpRight className="text-gray-400"/>
+                    </Link>
+                </li>
+            </ul>
+            <span className="mt-6 inline-block text-sm text-gray-400">Keuangan</span>
+            <ul className="mt-2">
+                <li>
+                    <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/pemasukan"}>
                         <span>Pemasukan</span>
                         <ArrowUpRight className="text-gray-400"/>
                     </Link>
                 </li>
                 <li>
-                    <Link className="py-3 flex items-center justify-between" href={"/pengeluaran"}>
+                    <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/pengeluaran"}>
                         <span>Pengeluaran</span>
                         <ArrowUpRight className="text-gray-400"/>
                     </Link>

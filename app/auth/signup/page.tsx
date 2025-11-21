@@ -14,6 +14,8 @@ import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
     email: z.email(),
@@ -39,9 +41,29 @@ export default function Page() {
         }
     })
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+    const userSignup = async (email: string, name: string, password: string) => {
+        await axios.post("/api/auth/signup", {
+            email,
+            name,
+            password
+        }, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if(response.status === 201){
+                toast.success(`Halo, selamat datang di UMKM Money Book, ${response.data.user.name}!`);
+                route.push("/");
+            }
+        })
+        .catch((error: AxiosError) => {
+            console.error("There was an error!", error.message);
+        })
     }
+
+    const onSubmit = (data: z.infer<typeof formSchema>) => userSignup(data.email, data.nama, data.password); 
 
     return <div className="m-4 mt-12">
         <div>

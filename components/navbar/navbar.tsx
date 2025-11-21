@@ -1,5 +1,4 @@
 import { ArrowUpRight, LogOut, MenuIcon, UserIcon, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,6 +10,8 @@ import { useNavbar } from "./useNavbar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import UserAvatar from "../user-avatar/user-avatar";
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -21,6 +22,23 @@ export default function Navbar({ children, title }: NavbarProps) {
     const route = useRouter();
     const { isOpen, toggleNavbar } = useNavbar();
 
+    const userSignout = async () => {
+        await axios.get("/api/auth/signout", {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if(response.status === 200){
+                route.push("/auth/signin");
+            }
+        })
+        .catch(error => {
+            console.log("There was an error!", error.message);
+        });
+    }
+
     return <div className="w-full h-full fixed top-0">
         <div className="w-full p-4 bg-white flex justify-between items-center">
             <div className="flex gap-4">
@@ -29,10 +47,7 @@ export default function Navbar({ children, title }: NavbarProps) {
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger>
-                    <Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem className="flex justify-between" onClick={() => route.push("/akun")}>
@@ -40,7 +55,7 @@ export default function Navbar({ children, title }: NavbarProps) {
                         <UserIcon />
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="flex text-red-500 justify-between">
+                    <DropdownMenuItem className="flex text-red-500 justify-between" onClick={() => userSignout()}>
                         <span>Keluar</span>
                         <LogOut className="text-red-500" />
                     </DropdownMenuItem>
@@ -60,7 +75,7 @@ export default function Navbar({ children, title }: NavbarProps) {
                 <li>
                     <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/"}>
                         <span>Dashboard</span>
-                        <ArrowUpRight className="text-gray-400"/>
+                        <ArrowUpRight className="text-gray-400" />
                     </Link>
                 </li>
             </ul>
@@ -69,13 +84,13 @@ export default function Navbar({ children, title }: NavbarProps) {
                 <li>
                     <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/pemasukan"}>
                         <span>Pemasukan</span>
-                        <ArrowUpRight className="text-gray-400"/>
+                        <ArrowUpRight className="text-gray-400" />
                     </Link>
                 </li>
                 <li>
                     <Link className="py-3 flex items-center justify-between" onClick={() => toggleNavbar()} href={"/pengeluaran"}>
                         <span>Pengeluaran</span>
-                        <ArrowUpRight className="text-gray-400"/>
+                        <ArrowUpRight className="text-gray-400" />
                     </Link>
                 </li>
             </ul>

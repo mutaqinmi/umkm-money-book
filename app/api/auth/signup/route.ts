@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json({
             message: "success",
+            user: {
+                name: name,
+            }
         }, { status: 201 });
     } catch(e) {
         return NextResponse.json({ 

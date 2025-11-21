@@ -14,6 +14,8 @@ import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
     email: z.email(),
@@ -31,9 +33,34 @@ export default function Page() {
         }
     })
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+    const userSignin = async (email: string, password: string) => {
+        await axios.post("/api/auth/signin", {
+            email,
+            password
+        }, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if(response.status === 200){
+                toast.success(`Selamat datang, ${response.data.user.name}!`);
+                route.push("/");
+            }
+        })
+        .catch((error: AxiosError) => {
+            if (error.status === 401){
+                toast.error("Kredensial tidak valid.");
+            } else if (error.status === 404){
+                toast.error("Pengguna tidak ditemukan, silahkan untuk daftar.");
+            }
+
+            console.log("There was an error!", error.message);
+        });
     }
+
+    const onSubmit = (data: z.infer<typeof formSchema>) => userSignin(data.email, data.password);
 
     return <div className="m-4 mt-12">
         <div>

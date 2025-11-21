@@ -113,7 +113,7 @@ export default function Page() {
             </FieldSet>
             <Button type="submit" className="mt-12 w-full">Daftar</Button>
             <div className="w-full mt-2"><span className="text-center block text-sm text-gray-400">atau</span></div>
-            <Button variant={"outline"} type="button" className="mt-2 w-full" onClick={() => route.push("/signin")}>Sudah Punya Akun? Masuk</Button>
+            <Button variant={"outline"} type="button" className="mt-2 w-full" onClick={() => route.push("/auth/signin")}>Sudah Punya Akun? Masuk</Button>
         </form>
     </div>
 }

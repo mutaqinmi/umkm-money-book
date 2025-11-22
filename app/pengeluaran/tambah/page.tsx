@@ -26,6 +26,10 @@ import z from "zod";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createWorker } from "tesseract.js";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
+import axios, { AxiosError } from "axios";
 
 const formSchema = z.object({
     receiptImage: z.instanceof(File).optional()
@@ -34,31 +38,97 @@ const formSchema = z.object({
             "image/jpg",
             "image/png",
             "image/webp"
-        ].includes(file?.type || ""), "Hanya menerima file gambar (jpeg, jpg, png, webp)"),
+        ].includes(file?.type || ""), "Hanya menerima file gambar (jpeg, jpg, png, webp)")
+        .optional(),
     name: z.string().min(1, "Masukkan nama transaksi"),
-    price: z.number().min(1, "Masukkan nominal pemasukan"),
+    price: z.string().min(1, "Masukkan nominal pemasukan"),
     description: z.string().optional(),
 })
 
 export default function Page() {
     const route = useRouter();
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [ imageScanLoading, setImageScanLoading ] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            price: undefined,
+            price: "",
             description: "",
         }
     });
 
-    const handleImageUpload = (file: File | undefined, onChange: (file: File | undefined) => void) => {
+    const compressImage = (file: File, maxWidth: number = 800): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate new dimensions
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Could not get canvas context'));
+                        return;
+                    }
+
+                    // Draw and compress
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to base64 with quality compression
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(compressedDataUrl);
+                };
+                img.onerror = reject;
+                img.src = e.target?.result as string;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const ocrImage = async (file: string) => {
+        try {
+            const worker = await createWorker('eng');
+            const { data: { text } } = await worker.recognize(file);
+            await worker.terminate();
+
+            const totalRegex = /TOTAL[:\s]*[=]?\s*(?:Rp\.?\s*)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i;
+            const match = text.match(totalRegex);
+            
+            if (match && match[1]) {
+                const totalAmount = match[1].replace(/[.,]/g, ''); // Remove dots and commas
+                
+                form.setValue('price', totalAmount);
+            }
+        } catch(e) {
+            console.log(e);
+            toast.error("Gagal memindai gambar");
+        }
+    }
+
+    const handleImagePreview = async (file: File | undefined, onChange: (file: File | undefined) => void) => {
         if (file) {
             onChange(file);
 
             const reader = new FileReader();
-            reader.onloadend = () => {
+            reader.onloadend = async () => {
+                setImageScanLoading(true);
+                const compressedDataUrl = await compressImage(file);
+                await ocrImage(compressedDataUrl);
                 setImagePreview(reader.result as string);
+                setImageScanLoading(false);
             }
             reader.readAsDataURL(file);
         } else {
@@ -67,8 +137,31 @@ export default function Page() {
         }
     }
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        const formData = new FormData();
+        formData.append("transactionType", "pengeluaran");
+        formData.append("name", data.name);
+        formData.append("price", data.price.toString());
+        formData.append("description", data.description || "");
+        if (data.receiptImage) {
+            formData.append("receiptImage", data.receiptImage);
+        }
+
+        await axios.post("/api/transactions", formData, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data",
+            }
+        })
+        .then(response => {
+            if(response.status === 201){
+                toast.success("Berhasil menambahkan pengeluaran");
+                route.push("/pengeluaran");
+            }
+        })
+        .catch((error: AxiosError) => {
+            console.error("Error submitting form:", error.message);
+        });
     }
 
     return <Navbar title="Pengeluaran">
@@ -89,7 +182,7 @@ export default function Page() {
         </Breadcrumb>
         <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-xl text-gray-400">Tambah Data Pengeluaran</h2>
+                <h2 className="font-semibold text-xl">Tambah Data Pengeluaran</h2>
                 <FieldSet>
                     <Controller
                         name="receiptImage"
@@ -101,7 +194,7 @@ export default function Page() {
                                         <Focus size={16} />
                                     </div>
                                 </FieldLabel>
-                                <Input {...field} id="receiptImage" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e.target.files?.[0], onChange)} />
+                                <Input {...field} id="receiptImage" type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePreview(e.target.files?.[0], onChange)} />
                             </Field>
                         )}
                     />
@@ -155,9 +248,7 @@ export default function Page() {
                         <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {
-                                        route.push(imagePreview);
-                                    }}>
+                                    <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {}}>
                                         <Scaling />
                                     </Button>
                                 </DialogTrigger>
@@ -191,5 +282,9 @@ export default function Page() {
                 </div>
             </FieldSet>
         </form>
+        {imageScanLoading && <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center text-white gap-2">
+            <Spinner />
+            <span>Memproses gambar ...</span>
+        </div>}
     </Navbar>
 }

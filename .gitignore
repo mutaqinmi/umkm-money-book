@@ -43,3 +43,6 @@ next-env.d.ts
 
 # drizzle generated files
 ./drizzle
+
+# uploaded image
+/public/uploads/receipts/*

@@ -7,68 +7,57 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Focus, Home, Save, Scaling, Trash, X } from "lucide-react";
+import { Home, Save, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-    receiptImage: z.instanceof(File).optional()
-        .refine((file) => [
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp"
-        ].includes(file?.type || ""), "Hanya menerima file gambar (jpeg, jpg, png, webp)"),
     name: z.string().min(1, "Masukkan nama transaksi"),
-    price: z.number().min(1, "Masukkan nominal pemasukan"),
+    price: z.string().min(1, "Masukkan nominal pemasukan"),
     description: z.string().optional(),
 })
 
 export default function Page() {
     const route = useRouter();
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            price: undefined,
-            description: "",
+            price: "",
+            description: undefined,
         }
     });
 
-    const handleImageUpload = (file: File | undefined, onChange: (file: File | undefined) => void) => {
-        if (file) {
-            onChange(file);
-
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        const formData = new FormData();
+        formData.append("transactionType", "pemasukan");
+        formData.append("name", data.name);
+        formData.append("price", data.price.toString());
+        formData.append("description", data.description || "");
+        
+        await axios.post("/api/transactions", formData, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data",
             }
-            reader.readAsDataURL(file);
-        } else {
-            onChange(undefined);
-            setImagePreview(null);
-        }
-    }
-
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+        })
+        .then(response => {
+            if(response.status === 201){
+                toast.success("Berhasil menambahkan pemasukan");
+                route.push("/pemasukan");
+            }
+        })
+        .catch((error: AxiosError) => {
+            console.error("Error submitting form:", error.message);
+        });
     }
 
     return <Navbar title="Pemasukan">
@@ -89,23 +78,7 @@ export default function Page() {
         </Breadcrumb>
         <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-xl text-gray-400">Tambah Data Pemasukan</h2>
-                <FieldSet>
-                    <Controller
-                        name="receiptImage"
-                        control={form.control}
-                        render={({ field: { value, onChange, ...field }, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="receiptImage">
-                                    <div className="bg-black text-white p-3 rounded-lg">
-                                        <Focus size={16} />
-                                    </div>
-                                </FieldLabel>
-                                <Input {...field} id="receiptImage" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e.target.files?.[0], onChange)} />
-                            </Field>
-                        )}
-                    />
-                </FieldSet>
+                <h2 className="font-semibold text-xl">Tambah Data Pemasukan</h2>
             </div>
             <FieldSet className="mt-4">
                 <FieldGroup>
@@ -149,36 +122,6 @@ export default function Page() {
                         )}
                     />
                 </FieldGroup>
-                {imagePreview && (
-                    <div className="w-full h-30 relative">
-                        <Image src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
-                        <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {
-                                        route.push(imagePreview);
-                                    }}>
-                                        <Scaling />
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Preview Gambar</DialogTitle>
-                                    </DialogHeader>
-                                    <DialogDescription>
-                                        <Image src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
-                                    </DialogDescription>
-                                </DialogContent>
-                            </Dialog>
-                            <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {
-                                setImagePreview(null);
-                                form.setValue("receiptImage", undefined);
-                            }}>
-                                <Trash />
-                            </Button>
-                        </div>
-                    </div>
-                )}
                 <div className="w-full flex gap-2 justify-end items-center">
                     <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
                         <X />

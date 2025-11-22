@@ -41,7 +41,7 @@ export default function Navbar({ children, title }: NavbarProps) {
 
     return <div className="w-full h-full fixed top-0">
         <div className="w-full p-4 bg-white flex justify-between items-center">
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
                 <MenuIcon onClick={() => toggleNavbar()} />
                 <h1 className="text-lg font-semibold">{title}</h1>
             </div>
@@ -95,7 +95,7 @@ export default function Navbar({ children, title }: NavbarProps) {
                 </li>
             </ul>
         </div>
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto h-full pb-16">
             {children}
         </div>
     </div>

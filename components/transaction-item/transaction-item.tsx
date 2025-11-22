@@ -1,4 +1,4 @@
-import { BanknoteArrowDown, Edit, Trash } from "lucide-react";
+import { BanknoteArrowDown, BanknoteArrowUp, Edit, Scaling, Trash } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -10,51 +10,85 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "../ui/button";
+import { transactions } from "@/src/db/schema";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-export function TransactionItem() {
+export function TransactionItem({ transaction }: { transaction: transactions }) {
     return <Dialog>
         <DialogTrigger asChild>
             <div className="flex justify-between items-center p-4 h-20 bg-white rounded-lg my-2">
                 <div className="h-full flex gap-3">
-                    <div className="h-full flex items-center justify-center bg-green-200 aspect-square rounded-full"><BanknoteArrowDown className="text-green-500" /></div>
+                    <div className={cn(
+                        "h-full flex items-center justify-center aspect-square rounded-full",
+                        transaction.transactionType === "pemasukan" ? "bg-green-200 text-green-500" : "",
+                        transaction.transactionType === "pengeluaran" ? "bg-red-200 text-red-500" : ""
+                    )}>{transaction.transactionType === "pemasukan" ? <BanknoteArrowDown /> : <BanknoteArrowUp />}</div>
                     <div className="flex flex-col">
-                        <span className="font-semibold">Penjualan Harian</span>
-                        <span className="text-sm text-gray-400">18 November 2025</span>
+                        <span className="font-semibold">{transaction.name}</span>
+                        <span className="text-sm text-gray-400">{transaction.date}</span>
                     </div>
                 </div>
-                <span className="text-green-500 text-sm">+ Rp.200.000</span>
+                <span className={cn(
+                    "text-sm",
+                    transaction.transactionType === "pemasukan" ? "text-green-500" : "",
+                    transaction.transactionType === "pengeluaran" ? "text-red-500" : ""
+                )}>{transaction.transactionType === "pemasukan" ? "+" : "-"} Rp.{transaction.price}</span>
             </div>
         </DialogTrigger>
         <DialogContent>
             <DialogHeader className="text-start">
                 <DialogTitle>Detail Transaksi</DialogTitle>
-                <DialogDescription>ID: #TRX20251118</DialogDescription>
+                <DialogDescription>ID: {transaction.id}</DialogDescription>
             </DialogHeader>
             <div className="w-full border-t border-t-gray-400 border-dashed"></div>
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Tanggal Transaksi</span>
-                    <span className="font-semibold">18 November 2025</span>
+                    <span className="font-semibold">{transaction.date}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Jenis Transaksi</span>
-                    <Badge variant={"secondary"} className="bg-green-200 text-green-600">Pemasukan</Badge>
+                    <Badge variant={"secondary"} className={cn(
+                        transaction.transactionType === "pemasukan" ? "bg-green-100 text-green-800" : "",
+                        transaction.transactionType === "pengeluaran" ? "bg-red-100 text-red-800" : ""
+                    )}>{transaction.transactionType.charAt(0).toUpperCase() + transaction.transactionType.slice(1)}</Badge>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Nama Transaksi</span>
-                    <span className="font-semibold">Penjualan Harian</span>
+                    <span className="font-semibold">{transaction.name}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Total Transaksi</span>
-                    <span className="font-semibold">Rp.200.000</span>
+                    <span className="font-semibold">Rp.{transaction.price}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Catatan</span>
-                    <span className="font-semibold">-</span>
+                    <span className="font-semibold">{transaction.description || "-"}</span>
                 </div>
+                {transaction.receiptImage && <div className="w-full h-30 relative">
+                    <Image src={`/uploads/receipts/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
+                    <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {}}>
+                                    <Scaling />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Preview Gambar</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription>
+                                    <Image src={`/uploads/receipts/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
+                                </DialogDescription>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>}
             </div>
             <DialogFooter>
-                <div className="flex gap-2 justify-end items-center">
+                <div className="flex gap-2 justify-between items-center">
                     <Button variant={"outline"} className="w-fit text-red-500">
                         <Trash />
                         <span>Hapus</span>

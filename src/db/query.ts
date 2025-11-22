@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from ".";
 import * as table from "./schema";
 
@@ -21,14 +21,19 @@ export function createUser(id: string, email: string, password: string, name: st
     }).returning();
 }
 
-export function getTransactions(userId: string){
+export function getTransactions(userId: string, limit?: number, offset?: number){
     return db.select().from(table.transactions)
-        .where(eq(table.transactions.userId, userId));
+        .where(eq(table.transactions.userId, userId))
+        .limit(limit ?? 10)
+        .offset(offset ?? 0)
+        .orderBy(desc(table.transactions.createdAt));
 }
 
-export function getTransactionsWithType(userId: string, transactionType: string){
+export function getTransactionsWithType(userId: string, transactionType: string, limit?: number){
     return db.select().from(table.transactions)
-        .where(and(eq(table.transactions.userId, userId), eq(table.transactions.transactionType, transactionType)));
+        .where(and(eq(table.transactions.userId, userId), eq(table.transactions.transactionType, transactionType)))
+        .limit(limit ?? 10)
+        .orderBy(desc(table.transactions.createdAt));
 }
 
 export function getTransactionById(transactionId: string){

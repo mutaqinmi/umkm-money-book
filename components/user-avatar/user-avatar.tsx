@@ -6,26 +6,26 @@ export default function UserAvatar({ children, className }: { children?: React.R
     const [ profilePicture, setProfilePicture ] = useState<string | undefined>(undefined);
     const [ nameFallback, setNameFallback ] = useState<string>("");
 
-    const userInfo = async () => {
-        await axios.get("/api/user", {
-            withCredentials: true,
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        .then(response => {
-            if(response.status === 200){
-                setProfilePicture(response.data.user.profileImage || null);
-                setNameFallback((response.data.user.name as string).split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase());
-            }
-        })
-        .catch(error => {
-            console.log("There was an error!", error.message);
-        });
-    }
-
     useEffect(() => {
-        userInfo();
+        const fetchData = async () => {
+            try {
+                const response = await axios.get("/api/user", {
+                    withCredentials: true,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                
+                if(response.status === 200){
+                    setProfilePicture(response.data.user.profileImage || null);
+                    setNameFallback((response.data.user.name as string).split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase());
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            }
+        }
+
+        fetchData();
     }, []);
 
     return <Avatar className={className}>

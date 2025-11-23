@@ -1,4 +1,4 @@
-import { createTransaction, deleteTransaction, editTransaction, getTransactionById, getTransactions, getTransactionsWithType } from "@/src/db/query";
+import { createTransaction, deleteTransaction, editTransaction, getTransactionById, getTransactions, getTransactionsWithType, getUserById, updateBalance } from "@/src/db/query";
 import { mkdir, writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path/win32";
@@ -53,18 +53,27 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user_id = req.cookies.get("user_id")?.value;
+        
+        if(!user_id){
+            return NextResponse.json({ 
+                message: "Missing user_id"
+            }, { status: 400 });
+        }
+
         const formData = await req.formData();
         const transactionType = formData.get("transactionType");
         const name = formData.get("name");
         const price = formData.get("price");
         const description = formData.get("description");
-        const receiptImage = formData.get("receiptImage") as File | null;
-        let fileName = "";
+        const receiptImage = formData.get("receiptImage") as File | undefined;
+        let fileName: string | undefined = undefined;
+        
+        const user = await getUserById(user_id);
 
-        if(!user_id){
+        if(user.length === 0){
             return NextResponse.json({ 
-                message: "Missing user_id"
-            }, { status: 400 });
+                message: "User not found"
+            }, { status: 404 });
         }
 
         if(!transactionType || !name || !price){
@@ -99,11 +108,12 @@ export async function POST(req: NextRequest) {
             fileName
         );
 
+        await updateBalance(user_id, user[0].balance + (transactionType === "pemasukan" ? parseFloat(price as string) : -parseFloat(price as string)));
+
         return NextResponse.json({ 
             message: "Transaction created successfully"
         }, { status: 201 });
     } catch(e) {
-        console.log(e);
         return NextResponse.json({ 
             message: "Error occurred",
             error: e
@@ -113,9 +123,54 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
     try {
-        const { transactionType, name, price, description, receiptImage } = await req.json();
+        const user_id = req.cookies.get("user_id")?.value;
+        
+        if(!user_id){
+            return NextResponse.json({ 
+                message: "Missing user_id"
+            }, { status: 400 });
+        }
 
-        await editTransaction(transactionType, name, price, description, receiptImage);
+        const formData = await req.formData();
+        const transactionId = formData.get("transactionID");
+        const name = formData.get("name");
+        const price = formData.get("price");
+        const description = formData.get("description");
+        
+        const user = await getUserById(user_id);
+
+        if(user.length === 0){
+            return NextResponse.json({ 
+                message: "User not found"
+            }, { status: 404 });
+        }
+        
+        if(!transactionId){
+            return NextResponse.json({ 
+                message: "Missing transaction_id"
+            }, { status: 400 });
+        }
+
+        const transaction = await getTransactionById(transactionId as string);
+        
+        if(transaction.length > 0){
+            let newBalance = user[0].balance;
+            if(transaction[0].transactionType === "pemasukan"){
+                newBalance -= transaction[0].price;
+            } else {
+                newBalance += transaction[0].price;
+            }
+            newBalance += parseFloat(price as string) * (transaction[0].transactionType === "pemasukan" ? 1 : -1);
+
+            await updateBalance(user_id, newBalance);
+        }
+
+        await editTransaction(
+            transactionId as string, 
+            name as string, 
+            parseFloat(price as string), 
+            description as string, 
+        );
 
         return NextResponse.json({ 
             message: "Transaction updated successfully"
@@ -131,12 +186,35 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     try {
         const transaction_id = req.nextUrl.searchParams.get("transaction_id");
-
+        
         if(!transaction_id){
             return NextResponse.json({ 
                 message: "Missing transaction_id"
             }, { status: 400 });
         }
+
+        const transaction = await getTransactionById(transaction_id);
+        
+        if(transaction.length === 0){
+            return NextResponse.json({ 
+                message: "Transaction not found"
+            }, { status: 404 });
+        }
+
+        const user = await getUserById(transaction[0].userId);
+        if(user.length === 0){
+            return NextResponse.json({ 
+                message: "User not found"
+            }, { status: 404 });
+        }
+
+        let newBalance = user[0].balance;
+        if(transaction[0].transactionType === "pemasukan"){
+            newBalance -= transaction[0].price;
+        } else {
+            newBalance += transaction[0].price;
+        }
+        await updateBalance(user[0].id, newBalance);
 
         await deleteTransaction(transaction_id);
 

@@ -61,7 +61,7 @@ export default function Page() {
                     ?
                         <Skeleton className="h-6 w-24" />
                     :
-                        <span className="font-semibold">Rp.{balance}</span>
+                        <span className="font-semibold">Rp.{Intl.NumberFormat('id-ID').format(balance)}</span>
             }
         </div>
         <div className="mt-6">

@@ -21,6 +21,12 @@ export function createUser(id: string, email: string, password: string, name: st
     }).returning();
 }
 
+export function updateBalance(userId: string, balance: number){
+    return db.update(table.users).set({
+        balance
+    }).where(eq(table.users.id, userId)).returning();
+}
+
 export function getTransactions(userId: string, limit?: number, offset?: number){
     return db.select().from(table.transactions)
         .where(eq(table.transactions.userId, userId))
@@ -53,12 +59,11 @@ export function createTransaction(id: string, userId: string, transactionType: s
     }).returning();
 }
 
-export function editTransaction(id: string, name: string, price: number, description?: string, receiptImage?: string){
+export function editTransaction(id: string, name: string, price: number, description?: string){
     return db.update(table.transactions).set({
         name,
         price,
-        description,
-        receiptImage
+        description
     }).where(eq(table.transactions.id, id)).returning();
 }
 

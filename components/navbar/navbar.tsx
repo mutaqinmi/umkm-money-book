@@ -95,7 +95,7 @@ export default function Navbar({ children, title }: NavbarProps) {
                 </li>
             </ul>
         </div>
-        <div className="p-4 overflow-y-auto h-full pb-16">
+        <div className="p-4 overflow-y-auto h-full pb-32">
             {children}
         </div>
     </div>

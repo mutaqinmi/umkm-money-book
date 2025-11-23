@@ -15,8 +15,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Home, Save, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const formSchema = z.object({
     name: z.string().min(1, "Masukkan nama transaksi"),
@@ -25,6 +27,7 @@ const formSchema = z.object({
 })
 
 export default function Page() {
+    const transactionID = useSearchParams().get("transaction_id");
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -34,22 +37,46 @@ export default function Page() {
         }
     });
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get(`/api/transactions?transaction_id=${transactionID}`, {
+                    withCredentials: true,
+                });
+
+                if (response.status === 200) {
+                    form.reset({
+                        name: response.data.data[0].name,
+                        price: response.data.data[0].price.toString(),
+                        description: response.data.data[0].description || "",
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching transaction:", error);
+            }
+        }
+
+        if (transactionID) {
+            fetchData();
+        }
+    }, [transactionID, form]);
+
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         const formData = new FormData();
-        formData.append("transactionType", "pemasukan");
+        formData.append("transactionID", transactionID || "");
         formData.append("name", data.name);
         formData.append("price", data.price.toString());
         formData.append("description", data.description || "");
 
-        await axios.post("/api/transactions", formData, {
+        await axios.put("/api/transactions", formData, {
             withCredentials: true,
             headers: {
                 "Content-Type": "multipart/form-data",
             }
         })
             .then(response => {
-                if (response.status === 201) {
-                    toast.success("Berhasil menambahkan pemasukan");
+                if (response.status === 200) {
+                    toast.success("Berhasil mengubah pemasukan");
                     history.back();
                 }
             })
@@ -70,13 +97,13 @@ export default function Page() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                    <BreadcrumbLink href="/pemasukan/tambah">Tambah</BreadcrumbLink>
+                    <BreadcrumbLink href="/pemasukan/ubah">Ubah</BreadcrumbLink>
                 </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
         <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-xl">Tambah Data Pemasukan</h2>
+                <h2 className="font-semibold text-xl">Ubah Data Pemasukan</h2>
             </div>
             <FieldSet className="mt-4">
                 <FieldGroup>

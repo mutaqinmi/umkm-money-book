@@ -25,7 +25,6 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { createWorker } from "tesseract.js";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -46,8 +45,7 @@ const formSchema = z.object({
 })
 
 export default function Page() {
-    const route = useRouter();
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [ imagePreview, setImagePreview ] = useState<string | null>(null);
     const [ imageScanLoading, setImageScanLoading ] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -156,7 +154,7 @@ export default function Page() {
         .then(response => {
             if(response.status === 201){
                 toast.success("Berhasil menambahkan pengeluaran");
-                route.push("/pengeluaran");
+                history.back();
             }
         })
         .catch((error: AxiosError) => {
@@ -221,7 +219,10 @@ export default function Page() {
                         render={({ field, fieldState }) => (
                             <Field data-invalid={fieldState.invalid}>
                                 <FieldLabel htmlFor="price">Jumlah Transaksi</FieldLabel>
-                                <Input {...field} id="price" type="number" autoComplete="off" placeholder="5000000" />
+                                <div className="relative">
+                                    <Input {...field} id="price" type="number" autoComplete="off" placeholder="5.000.000" className="pl-9" />
+                                    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 font-semibold">Rp.</span>
+                                </div>
                                 {fieldState.invalid && (
                                     <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
                                 )}

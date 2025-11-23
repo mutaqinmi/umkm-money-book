@@ -13,8 +13,36 @@ import { Button } from "../ui/button";
 import { transactions } from "@/src/db/schema";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import axios from "axios";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function TransactionItem({ transaction }: { transaction: transactions }) {
+    const route = useRouter();
+    const deleteTransaction = async (transactionID: string) => {
+        await axios.delete(`/api/transactions?transaction_id=${transactionID}`)
+            .then(response => {
+                if(response.status === 200) {
+                    toast.success("Transaksi berhasil dihapus!");
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error("There was an error deleting the transaction!", error);
+            });
+    }
+
     return <Dialog>
         <DialogTrigger asChild>
             <div className="flex justify-between items-center p-4 h-20 bg-white rounded-lg my-2">
@@ -33,7 +61,7 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
                     "text-sm",
                     transaction.transactionType === "pemasukan" ? "text-green-500" : "",
                     transaction.transactionType === "pengeluaran" ? "text-red-500" : ""
-                )}>{transaction.transactionType === "pemasukan" ? "+" : "-"} Rp.{transaction.price}</span>
+                )}>{transaction.transactionType === "pemasukan" ? "+" : "-"} Rp.{Intl.NumberFormat('id-ID').format(transaction.price)}</span>
             </div>
         </DialogTrigger>
         <DialogContent>
@@ -60,7 +88,7 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Total Transaksi</span>
-                    <span className="font-semibold">Rp.{transaction.price}</span>
+                    <span className="font-semibold">Rp.{Intl.NumberFormat('id-ID').format(transaction.price)}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-gray-400">Catatan</span>
@@ -71,7 +99,7 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
                     <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => {}}>
+                                <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => { }}>
                                     <Scaling />
                                 </Button>
                             </DialogTrigger>
@@ -89,11 +117,27 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
             </div>
             <DialogFooter>
                 <div className="flex gap-2 justify-between items-center">
-                    <Button variant={"outline"} className="w-fit text-red-500">
-                        <Trash />
-                        <span>Hapus</span>
-                    </Button>
-                    <Button className="w-fit">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant={"outline"} className="w-fit text-red-500">
+                                <Trash />
+                                <span>Hapus</span>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Tindakan ini tidak dapat dibatalkan. Transaksi yang dihapus akan hilang secara permanen.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteTransaction(transaction.id)}>Hapus</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <Button className="w-fit" onClick={() => route.push(`/${transaction.transactionType}/ubah?transaction_id=${transaction.id}`)}>
                         <Edit />
                         <span>Edit</span>
                     </Button>

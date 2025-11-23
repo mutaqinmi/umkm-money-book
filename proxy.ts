@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./src/utils/jwt";
 
-export default async function proxy(req: NextRequest){
+export async function proxy(req: NextRequest){
     if(req.nextUrl.pathname.startsWith("/api/auth")){
         return NextResponse.next();
     }
@@ -16,6 +16,16 @@ export default async function proxy(req: NextRequest){
         "/auth/signout"
     ];
 
+    if (req.nextUrl.pathname.startsWith("/api")){
+        if(!authenticated){
+            return NextResponse.json({
+            message: "Unauthorized"
+        }, { status: 401 } );
+        }
+
+        return NextResponse.next();
+    }
+
     if (authenticated && authPages.includes(req.nextUrl.pathname)){
         return NextResponse.redirect(new URL("/", req.url));
     } 
@@ -24,13 +34,7 @@ export default async function proxy(req: NextRequest){
         if (authPages.includes(req.nextUrl.pathname)){
             return NextResponse.next();
         }
-
-        if (req.nextUrl.pathname.startsWith("/api")){
-            return NextResponse.json({
-                message: "Unauthorized"
-            }, { status: 401 } );
-        }
-
+        
         return NextResponse.redirect(new URL("/auth/signin", req.url));
     }
 

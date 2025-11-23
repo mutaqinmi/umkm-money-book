@@ -49,9 +49,6 @@ export default function Page() {
     const userInfo = async () => {
         await axios.get("/api/user", {
             withCredentials: true,
-            headers: {
-                "Content-Type": "application/json"
-            }
         })
         .then(response => {
             if(response.status === 200){

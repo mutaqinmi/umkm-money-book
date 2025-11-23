@@ -27,9 +27,6 @@ export default function Page() {
             try {
                 const response = await axios.get(`/api/transactions?transaction_type=pemasukan&limit=${dataLimit}`, {
                     withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
                 })
 
                 if(response.status === 200){

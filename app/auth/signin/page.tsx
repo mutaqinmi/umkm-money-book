@@ -39,9 +39,6 @@ export default function Page() {
             password
         }, {
             withCredentials: true,
-            headers: {
-                "Content-Type": "application/json"
-            }
         })
         .then(response => {
             if(response.status === 200){

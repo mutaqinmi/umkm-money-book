@@ -24,15 +24,9 @@ export default function Page() {
                 const [ userInfo, transactionHistory ] = await Promise.all([
                     axios.get("/api/user", {
                         withCredentials: true,
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
                     }),
                     axios.get("/api/transactions", {
                         withCredentials: true,
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
                     })
                 ])
 

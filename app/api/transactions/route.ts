@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
             message: "Transaction created successfully"
         }, { status: 201 });
     } catch(e) {
+        console.log(e);
         return NextResponse.json({ 
             message: "Error occurred",
             error: e

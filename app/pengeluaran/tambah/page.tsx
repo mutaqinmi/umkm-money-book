@@ -31,7 +31,7 @@ import { Spinner } from "@/components/ui/spinner";
 import axios, { AxiosError } from "axios";
 
 const formSchema = z.object({
-    receiptImage: z.instanceof(File).optional()
+    receiptImage: z.instanceof(File)
         .refine((file) => [
             "image/jpeg",
             "image/jpg",
@@ -147,9 +147,6 @@ export default function Page() {
 
         await axios.post("/api/transactions", formData, {
             withCredentials: true,
-            headers: {
-                "Content-Type": "multipart/form-data",
-            }
         })
         .then(response => {
             if(response.status === 201){

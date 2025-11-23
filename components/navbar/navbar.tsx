@@ -25,9 +25,6 @@ export default function Navbar({ children, title }: NavbarProps) {
     const userSignout = async () => {
         await axios.get("/api/auth/signout", {
             withCredentials: true,
-            headers: {
-                "Content-Type": "application/json"
-            }
         })
         .then(response => {
             if(response.status === 200){

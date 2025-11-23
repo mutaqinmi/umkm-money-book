@@ -92,9 +92,6 @@ function EditTransactionForm() {
 
         await axios.put("/api/transactions", formData, {
             withCredentials: true,
-            headers: {
-                "Content-Type": "multipart/form-data",
-            }
         })
             .then(response => {
                 if (response.status === 200) {

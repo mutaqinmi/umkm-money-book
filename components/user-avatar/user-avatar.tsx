@@ -11,9 +11,6 @@ export default function UserAvatar({ children, className }: { children?: React.R
             try {
                 const response = await axios.get("/api/user", {
                     withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
                 })
                 
                 if(response.status === 200){

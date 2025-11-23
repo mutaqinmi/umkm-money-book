@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Home, Save, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { Suspense, useEffect } from "react";
@@ -26,7 +26,7 @@ const formSchema = z.object({
     description: z.string().optional(),
 })
 
-export default function Page() {
+function EditTransactionForm() {
     const transactionID = useSearchParams().get("transaction_id");
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -85,6 +85,70 @@ export default function Page() {
             });
     }
 
+    return <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-xl">Ubah Data Pemasukan</h2>
+        </div>
+        <FieldSet className="mt-4">
+            <FieldGroup>
+                <Controller
+                    name="name"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="name">Nama Transaksi</FieldLabel>
+                            <Input {...field} id="name" type="text" autoComplete="off" placeholder="Gaji Bulanan" />
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="price"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="price">Jumlah Transaksi</FieldLabel>
+                            <div className="relative">
+                                <Input {...field} id="price" type="number" autoComplete="off" placeholder="5.000.000" className="pl-9" />
+                                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 font-semibold">Rp.</span>
+                            </div>
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="description">Catatan<span className="text-gray-400">(opsional)</span></FieldLabel>
+                            <Textarea {...field} id="description" placeholder="Catatan" />
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+            </FieldGroup>
+            <div className="w-full flex gap-2 justify-end items-center">
+                <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
+                    <X />
+                    <span>Batal</span>
+                </Button>
+                <Button type="submit" className="w-fit mt-4 flex gap-1 items-center">
+                    <Save />
+                    <span>Simpan</span>
+                </Button>
+            </div>
+        </FieldSet>
+    </form>
+}
+
+export default function Page() {
     return <Navbar title="Pemasukan">
         <Breadcrumb className="mb-4">
             <BreadcrumbList>
@@ -102,67 +166,7 @@ export default function Page() {
             </BreadcrumbList>
         </Breadcrumb>
         <Suspense>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl">Ubah Data Pemasukan</h2>
-                </div>
-                <FieldSet className="mt-4">
-                    <FieldGroup>
-                        <Controller
-                            name="name"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="name">Nama Transaksi</FieldLabel>
-                                    <Input {...field} id="name" type="text" autoComplete="off" placeholder="Gaji Bulanan" />
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="price"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="price">Jumlah Transaksi</FieldLabel>
-                                    <div className="relative">
-                                        <Input {...field} id="price" type="number" autoComplete="off" placeholder="5.000.000" className="pl-9" />
-                                        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 font-semibold">Rp.</span>
-                                    </div>
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="description"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="description">Catatan<span className="text-gray-400">(opsional)</span></FieldLabel>
-                                    <Textarea {...field} id="description" placeholder="Catatan" />
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
-                    <div className="w-full flex gap-2 justify-end items-center">
-                        <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
-                            <X />
-                            <span>Batal</span>
-                        </Button>
-                        <Button type="submit" className="w-fit mt-4 flex gap-1 items-center">
-                            <Save />
-                            <span>Simpan</span>
-                        </Button>
-                    </div>
-                </FieldSet>
-            </form>
+            <EditTransactionForm />
         </Suspense>
     </Navbar>
 }

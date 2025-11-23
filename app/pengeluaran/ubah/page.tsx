@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Home, Save, Scaling, Trash, X } from "lucide-react";
+import { Home, Save, Scaling, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { Suspense, useEffect, useState } from "react";
@@ -43,7 +43,7 @@ const formSchema = z.object({
     description: z.string().optional(),
 })
 
-export default function Page() {
+function EditTransactionForm() {
     const transactionID = useSearchParams().get("transaction_id");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const form = useForm<z.infer<typeof formSchema>>({
@@ -107,6 +107,92 @@ export default function Page() {
             });
     }
 
+    return <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-xl">Ubah Data Pengeluaran</h2>
+        </div>
+        <FieldSet className="mt-4">
+            <FieldGroup>
+                <Controller
+                    name="name"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="name">Nama Transaksi</FieldLabel>
+                            <Input {...field} id="name" type="text" autoComplete="off" placeholder="Belanja Bulanan" />
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="price"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="price">Jumlah Transaksi</FieldLabel>
+                            <div className="relative">
+                                <Input {...field} id="price" type="number" autoComplete="off" placeholder="5.000.000" className="pl-9" />
+                                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 font-semibold">Rp.</span>
+                            </div>
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="description">Catatan<span className="text-gray-400">(opsional)</span></FieldLabel>
+                            <Textarea {...field} id="description" placeholder="Catatan" />
+                            {fieldState.invalid && (
+                                <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
+                            )}
+                        </Field>
+                    )}
+                />
+            </FieldGroup>
+            {imagePreview && (
+                <div className="w-full h-30 relative">
+                    <Image unoptimized src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
+                    <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => { }}>
+                                    <Scaling />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Preview Gambar</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription>
+                                    <Image unoptimized src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
+                                </DialogDescription>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+            )}
+            <div className="w-full flex gap-2 justify-end items-center">
+                <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
+                    <X />
+                    <span>Batal</span>
+                </Button>
+                <Button type="submit" className="w-fit mt-4 flex gap-1 items-center">
+                    <Save />
+                    <span>Simpan</span>
+                </Button>
+            </div>
+        </FieldSet>
+    </form>
+}
+
+export default function Page() {
     return <Navbar title="Pengeluaran">
         <Breadcrumb className="mb-4">
             <BreadcrumbList>
@@ -124,89 +210,7 @@ export default function Page() {
             </BreadcrumbList>
         </Breadcrumb>
         <Suspense>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl">Ubah Data Pengeluaran</h2>
-                </div>
-                <FieldSet className="mt-4">
-                    <FieldGroup>
-                        <Controller
-                            name="name"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="name">Nama Transaksi</FieldLabel>
-                                    <Input {...field} id="name" type="text" autoComplete="off" placeholder="Belanja Bulanan" />
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="price"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="price">Jumlah Transaksi</FieldLabel>
-                                    <div className="relative">
-                                        <Input {...field} id="price" type="number" autoComplete="off" placeholder="5.000.000" className="pl-9" />
-                                        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 font-semibold">Rp.</span>
-                                    </div>
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                        <Controller
-                            name="description"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="description">Catatan<span className="text-gray-400">(opsional)</span></FieldLabel>
-                                    <Textarea {...field} id="description" placeholder="Catatan" />
-                                    {fieldState.invalid && (
-                                        <span className="text-sm text-red-500 mt-1">{fieldState.error?.message}</span>
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
-                    {imagePreview && (
-                        <div className="w-full h-30 relative">
-                            <Image unoptimized src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
-                            <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button type="button" variant={"ghost"} size={"icon-lg"} className="text-white" onClick={() => { }}>
-                                            <Scaling />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Preview Gambar</DialogTitle>
-                                        </DialogHeader>
-                                        <DialogDescription>
-                                            <Image unoptimized src={imagePreview} alt="Preview Gambar" width={200} height={200} className="w-full h-full rounded-lg object-cover" />
-                                        </DialogDescription>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        </div>
-                    )}
-                    <div className="w-full flex gap-2 justify-end items-center">
-                        <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
-                            <X />
-                            <span>Batal</span>
-                        </Button>
-                        <Button type="submit" className="w-fit mt-4 flex gap-1 items-center">
-                            <Save />
-                            <span>Simpan</span>
-                        </Button>
-                    </div>
-                </FieldSet>
-            </form>
+            <EditTransactionForm />
         </Suspense>
     </Navbar>
 }

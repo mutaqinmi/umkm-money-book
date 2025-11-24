@@ -95,7 +95,7 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
                     <span className="font-semibold">{transaction.description || "-"}</span>
                 </div>
                 {transaction.receiptImage && <div className="w-full h-30 relative">
-                    <Image src={`/uploads/receipts/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
+                    <Image src={`${process.env.NEXT_PUBLIC_DOMAIN}/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
                     <div className="w-full h-full bg-black/50 absolute top-0 left-0 z-10 rounded-lg flex items-center justify-center gap-2">
                         <Dialog>
                             <DialogTrigger asChild>
@@ -108,7 +108,7 @@ export function TransactionItem({ transaction }: { transaction: transactions }) 
                                     <DialogTitle>Preview Gambar</DialogTitle>
                                 </DialogHeader>
                                 <DialogDescription>
-                                    <Image src={`/uploads/receipts/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
+                                    <Image src={`${process.env.NEXT_PUBLIC_DOMAIN}/${transaction.receiptImage}`} alt="Preview Gambar" width={200} height={200} unoptimized className="w-full h-full rounded-lg object-cover" />
                                 </DialogDescription>
                             </DialogContent>
                         </Dialog>

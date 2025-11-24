@@ -1,7 +1,5 @@
 import { createTransaction, deleteTransaction, editTransaction, getTransactionById, getTransactions, getTransactionsWithType, getUserById, updateBalance } from "@/src/db/query";
-import { mkdir, writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
@@ -76,7 +74,7 @@ export async function POST(req: NextRequest) {
         const price = formData.get("price");
         const description = formData.get("description");
         const receiptImage = formData.get("receiptImage") as File | undefined;
-        let fileUrl: string | undefined = undefined;
+        let fileName: string | undefined = undefined;
         
         const user = await getUserById(user_id);
 
@@ -96,7 +94,7 @@ export async function POST(req: NextRequest) {
             const bytes = await receiptImage.arrayBuffer();
         
             const fileExtension = receiptImage.name.split('.').pop();
-            const fileName = `receipts/${uuidv4()}.${fileExtension}`;
+            fileName = `receipts/${uuidv4()}.${fileExtension}`;
             
             // Upload to R2
             await r2.send(new PutObjectCommand({
@@ -105,9 +103,6 @@ export async function POST(req: NextRequest) {
                 Body: Buffer.from(bytes),
                 ContentType: receiptImage.type,
             }));
-            
-            // The public URL (configure custom domain in R2 settings)
-            fileUrl = `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileName}`;
         }
 
         const transactionId = uuidv4();
@@ -118,7 +113,7 @@ export async function POST(req: NextRequest) {
             name as string, 
             parseFloat(price as string), 
             description as string, 
-            fileUrl
+            fileName
         );
 
         await updateBalance(user_id, user[0].balance + (transactionType === "pemasukan" ? parseFloat(price as string) : -parseFloat(price as string)));

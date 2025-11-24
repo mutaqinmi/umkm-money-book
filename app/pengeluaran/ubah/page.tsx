@@ -46,7 +46,7 @@ const formSchema = z.object({
 
 function EditTransactionForm() {
     const transactionID = useSearchParams().get("transaction_id");
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [ imagePreview, setImagePreview ] = useState<string | null>(null);
     const [ submitState, setSubmitState ] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

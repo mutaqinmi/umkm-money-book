@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from ".";
 import * as table from "./schema";
 
@@ -70,4 +70,48 @@ export function editTransaction(id: string, name: string, price: number, descrip
 export function deleteTransaction(id: string){
     return db.delete(table.transactions)
         .where(eq(table.transactions.id, id));
+}
+
+export function getChartData(userId: string) {
+    const now = new Date();
+    const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    return db
+        .select({
+            date: table.transactions.date,
+            transactionType: table.transactions.transactionType,
+            total: sql<number>`SUM(${table.transactions.price})`.as('total'),
+        })
+        .from(table.transactions)
+        .where(
+            and(
+                eq(table.transactions.userId, userId),
+                gte(table.transactions.date, firstDayThisMonth.toISOString().split('T')[0]),
+                lte(table.transactions.date, lastDayThisMonth.toISOString().split('T')[0])
+            )
+        )
+        .groupBy(table.transactions.transactionType, table.transactions.date)
+        .orderBy(table.transactions.date);
+}
+
+export function getTotalTransactionLastMonth(userId: string) {
+    const now = new Date();
+    const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    return db
+        .select({
+            transactionType: table.transactions.transactionType,
+            total: sql<number>`SUM(${table.transactions.price})`.as('total'),
+        })
+        .from(table.transactions)
+        .where(
+            and(
+                eq(table.transactions.userId, userId),
+                gte(table.transactions.date, firstDayThisMonth.toISOString().split('T')[0]),
+                lte(table.transactions.date, lastDayThisMonth.toISOString().split('T')[0])
+            )
+        )
+        .groupBy(table.transactions.transactionType)
 }

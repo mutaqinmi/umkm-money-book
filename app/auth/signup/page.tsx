@@ -55,7 +55,7 @@ export default function Page() {
         })
         .then(response => {
             if(response.status === 201){
-                toast.success(`Halo, selamat datang di UMKM Money Book, ${response.data.user.name}!`);
+                toast.success(`Halo, selamat datang di Cekas, ${response.data.user.name}!`);
                 route.push("/");
             }
         })

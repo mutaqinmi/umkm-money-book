@@ -72,7 +72,7 @@ function EditTransactionForm() {
                     });
 
                     if (response.data.data[0].receiptImage) {
-                        setImagePreview(`${"/uploads/receipts/"}${response.data.data[0].receiptImage}` || null);
+                        setImagePreview(`${process.env.NEXT_PUBLIC_CDN_DOMAIN}/${response.data.data[0].receiptImage}` || null);
                     }
                 }
             } catch (error) {

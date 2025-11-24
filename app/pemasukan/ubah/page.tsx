@@ -18,7 +18,8 @@ import z from "zod";
 import { useSearchParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z.object({
     name: z.string().min(1, "Masukkan nama transaksi"),
@@ -27,6 +28,7 @@ const formSchema = z.object({
 })
 
 function EditTransactionForm() {
+    const [ submitState, setSubmitState ] = useState(false);
     const transactionID = useSearchParams().get("transaction_id");
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -52,7 +54,7 @@ function EditTransactionForm() {
                     });
                 }
             } catch (error) {
-                console.error("Error fetching transaction:", error);
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
             }
         }
 
@@ -62,6 +64,9 @@ function EditTransactionForm() {
     }, [transactionID, form]);
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        if(submitState) return;
+        setSubmitState(true);
+
         const formData = new FormData();
         formData.append("transactionID", transactionID || "");
         formData.append("name", data.name);
@@ -78,7 +83,10 @@ function EditTransactionForm() {
                 }
             })
             .catch((error: AxiosError) => {
-                console.error("Error submitting form:", error.message);
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
+            })
+            .finally(() => {
+                setSubmitState(false);
             });
     }
 
@@ -131,14 +139,22 @@ function EditTransactionForm() {
                     )}
                 />
             </FieldGroup>
-            <div className="w-full flex gap-2 justify-end items-center">
-                <Button type="button" variant={"outline"} className="w-fit mt-4 flex gap-1 items-center" onClick={() => history.back()}>
+            <div className="w-full flex gap-2 justify-end items-center mt-4">
+                <Button type="button" variant={"outline"} className="w-fit flex gap-1 items-center" onClick={() => history.back()}>
                     <X />
                     <span>Batal</span>
                 </Button>
-                <Button type="submit" className="w-fit mt-4 flex gap-1 items-center">
-                    <Save />
-                    <span>Simpan</span>
+                <Button type="submit" className="w-fit" disabled={submitState}>
+                    {
+                        submitState
+                            ?
+                                <Spinner /> 
+                            : 
+                                <div className="flex gap-1 items-center">
+                                    <Save />
+                                    <span>Simpan</span>
+                                </div>
+                    }
                 </Button>
             </div>
         </FieldSet>

@@ -16,11 +16,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z.object({
-    email: z.email(),
-    nama: z.string().min(1),
-    password: z.string().min(8),
+    email: z.email("Email tidak valid."),
+    nama: z.string("Nama tidak boleh kosong.").min(1),
+    password: z.string().min(8, "Kata sandi minimal 8 karakter."),
     confirmPassword: z.string().min(8),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords tidak cocok",
@@ -31,6 +32,7 @@ export default function Page() {
     const route = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [ submitState, setSubmitState ] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -42,6 +44,8 @@ export default function Page() {
     })
 
     const userSignup = async (email: string, name: string, password: string) => {
+        setSubmitState(true);
+
         await axios.post("/api/auth/signup", {
             email,
             name,
@@ -56,8 +60,11 @@ export default function Page() {
             }
         })
         .catch((error: AxiosError) => {
-            console.error("There was an error!", error.message);
+            toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
         })
+        .finally(() => {
+            setSubmitState(false);
+        });
     }
 
     const onSubmit = (data: z.infer<typeof formSchema>) => userSignup(data.email, data.nama, data.password); 
@@ -130,7 +137,7 @@ export default function Page() {
                     />
                 </FieldGroup>
             </FieldSet>
-            <Button type="submit" className="mt-12 w-full">Daftar</Button>
+            <Button type="submit" className="mt-12 w-full" disabled={submitState}>{submitState ? <Spinner /> : "Daftar"}</Button>
             <div className="w-full mt-2"><span className="text-center block text-sm text-gray-400">atau</span></div>
             <Button variant={"outline"} type="button" className="mt-2 w-full" onClick={() => route.push("/auth/signin")}>Sudah Punya Akun? Masuk</Button>
         </form>

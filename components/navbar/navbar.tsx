@@ -11,7 +11,10 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import UserAvatar from "../user-avatar/user-avatar";
+import { useEffect, useState } from "react";
+import { users } from "@/src/db/schema";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import { toast } from "sonner";
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -21,20 +24,39 @@ interface NavbarProps {
 export default function Navbar({ children, title }: NavbarProps) {
     const route = useRouter();
     const { isOpen, toggleNavbar } = useNavbar();
+    const [ userInfo, setUserInfo ] = useState<users | null>(null);
 
     const userSignout = async () => {
         await axios.get("/api/auth/signout", {
             withCredentials: true,
         })
-        .then(response => {
-            if(response.status === 200){
-                route.push("/auth/signin");
-            }
-        })
-        .catch(error => {
-            console.log("There was an error!", error.message);
-        });
+            .then(response => {
+                if (response.status === 200) {
+                    route.push("/auth/signin");
+                }
+            })
+            .catch(error => {
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
+            });
     }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get("/api/user", {
+                    withCredentials: true,
+                })
+
+                if (response.status === 200) {
+                    setUserInfo(response.data.user);
+                }
+            } catch (error) {
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
+            }
+        }
+
+        fetchData();
+    }, []);
 
     return <div className="w-full h-full fixed top-0">
         <div className="w-full p-4 bg-white flex justify-between items-center">
@@ -44,12 +66,17 @@ export default function Navbar({ children, title }: NavbarProps) {
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger>
-                    <UserAvatar />
+                    <Avatar>
+                        <AvatarFallback>{userInfo?.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex justify-between" onClick={() => route.push("/akun")}>
-                        <span>Profil</span>
+                    <DropdownMenuItem className="flex gap-3 items-center">
                         <UserIcon />
+                        <div className="flex flex-col items-start">
+                            <span className="text-sm">{userInfo?.name}</span>
+                            <span className="text-xs text-gray-400">{userInfo?.email}</span>
+                        </div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="flex text-red-500 justify-between" onClick={() => userSignout()}>

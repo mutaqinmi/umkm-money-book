@@ -16,15 +16,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z.object({
-    email: z.email(),
-    password: z.string().min(8),
+    email: z.email("Email tidak valid."),
+    password: z.string().min(8, "Kata sandi minimal 8 karakter."),
 })
 
 export default function Page() {
     const route = useRouter();
-    const [showPassword, setShowPassword] = useState(false);
+    const [ showPassword, setShowPassword ] = useState(false);
+    const [ submitState, setSubmitState ] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -34,6 +36,8 @@ export default function Page() {
     })
 
     const userSignin = async (email: string, password: string) => {
+        setSubmitState(true);
+        
         await axios.post("/api/auth/signin", {
             email,
             password
@@ -51,9 +55,12 @@ export default function Page() {
                 toast.error("Kredensial tidak valid.");
             } else if (error.status === 404){
                 toast.error("Pengguna tidak ditemukan, silahkan untuk daftar.");
+            } else {
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
             }
-
-            console.log("There was an error!", error.message);
+        })
+        .finally(() => {
+            setSubmitState(false);
         });
     }
 
@@ -98,7 +105,7 @@ export default function Page() {
                     />
                 </FieldGroup>
             </FieldSet>
-            <Button type="submit" className="mt-12 w-full">Masuk</Button>
+            <Button type="submit" className="mt-12 w-full" disabled={submitState}>{submitState ? <Spinner /> : "Masuk"}</Button>
             <div className="w-full mt-2"><span className="text-center block text-sm text-gray-400">atau</span></div>
             <Button variant={"outline"} type="button" className="mt-2 w-full" onClick={() => route.push("/auth/signup")}>Belum Punya Akun? Daftar</Button>
         </form>

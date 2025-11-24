@@ -10,6 +10,7 @@ import axios, { AxiosError } from "axios";
 import { BanknoteArrowDown, BanknoteArrowUp, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
     const route = useRouter();
@@ -38,7 +39,7 @@ export default function Page() {
                     setTransactionHistoryList(transactionHistory.data.data);
                 }
             } catch (error) {
-                console.log("There was an error!", error instanceof AxiosError ? error.message : 'Unknown error');
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
             } finally {
                 setLoading(false);
             }

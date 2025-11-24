@@ -15,6 +15,7 @@ import axios from "axios";
 import { Home, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
     const route = useRouter();
@@ -33,7 +34,7 @@ export default function Page() {
                     setTransactionList(response.data.data);
                 }
             } catch (error) {
-                console.log("There was an error!", error);
+                toast.error("Terjadi kesalahan, silahkan coba lagi nanti.");
             } finally {
                 setLoading(false);
             }

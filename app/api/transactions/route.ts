@@ -3,6 +3,16 @@ import { mkdir, writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const r2 = new S3Client({
+    region: "auto",
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    },
+});
 
 export async function GET(req: NextRequest) {
     try {
@@ -66,7 +76,7 @@ export async function POST(req: NextRequest) {
         const price = formData.get("price");
         const description = formData.get("description");
         const receiptImage = formData.get("receiptImage") as File | undefined;
-        let fileName: string | undefined = undefined;
+        let fileUrl: string | undefined = undefined;
         
         const user = await getUserById(user_id);
 
@@ -84,17 +94,20 @@ export async function POST(req: NextRequest) {
 
         if (receiptImage) {
             const bytes = await receiptImage.arrayBuffer();
-            const buffer = Buffer.from(bytes);
-
+        
             const fileExtension = receiptImage.name.split('.').pop();
-            fileName = `${uuidv4()}.${fileExtension}`;
+            const fileName = `receipts/${uuidv4()}.${fileExtension}`;
             
-            const uploadDir = path.join(process.cwd(), "public", "uploads", "receipts");
-            const filePath = path.join(uploadDir, fileName);
-
-            await mkdir(uploadDir, { recursive: true });
-
-            await writeFile(filePath, buffer);
+            // Upload to R2
+            await r2.send(new PutObjectCommand({
+                Bucket: process.env.R2_BUCKET_NAME,
+                Key: fileName,
+                Body: Buffer.from(bytes),
+                ContentType: receiptImage.type,
+            }));
+            
+            // The public URL (configure custom domain in R2 settings)
+            fileUrl = `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileName}`;
         }
 
         const transactionId = uuidv4();
@@ -105,7 +118,7 @@ export async function POST(req: NextRequest) {
             name as string, 
             parseFloat(price as string), 
             description as string, 
-            fileName
+            fileUrl
         );
 
         await updateBalance(user_id, user[0].balance + (transactionType === "pemasukan" ? parseFloat(price as string) : -parseFloat(price as string)));

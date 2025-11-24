@@ -1,7 +1,7 @@
 import { createTransaction, deleteTransaction, editTransaction, getTransactionById, getTransactions, getTransactionsWithType, getUserById, updateBalance } from "@/src/db/query";
 import { mkdir, writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
-import path from "path/win32";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 export async function GET(req: NextRequest) {
